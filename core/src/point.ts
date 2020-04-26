@@ -1,22 +1,22 @@
 export class Point {
     static uuid = 1
-    constructor(public x: number, public y: number, public id: number = Point.uuid++, public val: number = 2) {
-        this.id = id
-        this.x = x;
-        this.y = y;
-        this.val = val;
+    id: number;
+    val: number;
+    constructor(public x: number, public y: number) {
+        this.id = Point.uuid++;
+        this.val = Math.random() < 0.3 ? 4 : 2;
     }
-    rebase(val: number, base: number) {
+    location(val: number, base: number) {
         this.x = val % base
         this.y = Math.floor(val / base)
     }
 }
 
-export type Item = Point | number | undefined;
+export type Block = Point | number | undefined;
 
-export function acc(itemQueue: Item[]): Point[] {
-    const len = itemQueue.length;
-    let points = <Point[]>itemQueue.filter(item => item instanceof Point)
+export function forward(blockQueue: Block[]): Point[] {
+    const len = blockQueue.length;
+    let points = <Point[]>blockQueue.filter(item => item instanceof Point)
     let index = -1;
     for (let i = 0, len = points.length; i < len; i++) {
         let current = points[i];
@@ -34,9 +34,9 @@ export function acc(itemQueue: Item[]): Point[] {
     return points
 }
 
-export function revAcc(itemQueue: Item[]): Point[] {
-    const len = itemQueue.length;
-    let points = <Point[]>itemQueue.filter(item => item instanceof Point)
+export function backward(blockQueue: Block[]): Point[] {
+    const len = blockQueue.length;
+    let points = <Point[]>blockQueue.filter(item => item instanceof Point)
     let index = -1;
     for (let i = points.length - 1; i >= 0; i--) {
         let current = points[i];
@@ -47,27 +47,22 @@ export function revAcc(itemQueue: Item[]): Point[] {
         }
     }
     if (index != -1) {
-        points.splice(index + 1, 1);
         points[index].val += points[index].val
+        points.splice(index - 1, 1);  // splice 会导致index发生变化 
     }
-    while(points.length < len) {
+    while (points.length < len) {
         points.unshift(undefined)
     }
     return points
 }
 
-export function flatten(itemQueue: Item[][]): Point[] {
+export function flatten(blockQueue: Block[][]): Point[] {
     let result = []
-    let len = Math.max(...itemQueue.map(item => item.length))
-    for(let i = 0; i < len; i++) {
-        for(let id = 0; id < itemQueue.length; id++) {
-            let queue = itemQueue[id];
-            let item = queue[i];
-            if (item instanceof Point) {
-                result.push(item)
-            } else {
-                result.push(undefined)
-            }
+    let max = Math.max(...blockQueue.map(item => item.length))
+    for (let i = 0; i < max; i++) {
+        for (let x = 0; x < blockQueue.length; x++) {
+            let block = blockQueue[x][i];
+            result.push(block instanceof Point ? block : undefined)
         }
     }
     return result

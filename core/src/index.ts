@@ -1,7 +1,7 @@
-import { Point, Item, acc, revAcc, flatten } from "./point"
+import { Point, Block, forward, backward, flatten } from "./point"
 
 export class Game {
-    private points: Item[];
+    private points: Block[];
     constructor(public xMax: number = 8, public yMax: number = 8) {
         this.xMax = xMax;
         this.yMax = yMax;
@@ -51,7 +51,7 @@ export class Game {
         for (let i = 0; i < this.points.length; i++) {
             let point = this.points[i];
             if (typeof point == "object") {
-                point.rebase(i, this.xMax)
+                point.location(i, this.xMax)
             } else {
                 this.points[i] = i;
             }
@@ -62,7 +62,7 @@ export class Game {
         for (let i = 0; i < rows.length; i++) {
             let row = rows[i] || [];
             row.length = this.xMax;
-            rows[i] = acc(row)
+            rows[i] = forward(row)
         }
         this.points = rows.reduce((acc, item) => acc.concat(item), [])
         this.spawn()
@@ -72,7 +72,7 @@ export class Game {
         for (let i = 0; i < rows.length; i++) {
             let row = rows[i] || [];
             row.length = this.xMax;
-            rows[i] = revAcc(row)
+            rows[i] = backward(row)
         }
         this.points = rows.reduce((acc, item) => acc.concat(item), [])
         this.spawn()
@@ -82,7 +82,7 @@ export class Game {
         for (let i = 0; i < columns.length; i++) {
             let column = columns[i] || [];
             column.length = this.yMax;
-            columns[i] = acc(column)
+            columns[i] = forward(column)
         }
         this.points = flatten(columns)
         this.spawn()
@@ -92,7 +92,7 @@ export class Game {
         for (let i = 0; i < columns.length; i++) {
             let column = columns[i] || [];
             column.length = this.yMax;
-            columns[i] = revAcc(column)
+            columns[i] = backward(column)
         }
         this.points = flatten(columns)
         this.spawn()

@@ -4,7 +4,7 @@
 
 "@types/mocha@^7.0.2":
   version "7.0.2"
-  resolved "https://registry.npm.taobao.org/@types/mocha/download/@types/mocha-7.0.2.tgz#b17f16cf933597e10d6d78eae3251e692ce8b0ce"
+  resolved "https://registry.npm.taobao.org/@types/mocha/download/@types/mocha-7.0.2.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2F%40types%2Fmocha%2Fdownload%2F%40types%2Fmocha-7.0.2.tgz#b17f16cf933597e10d6d78eae3251e692ce8b0ce"
   integrity sha1-sX8Wz5M1l+ENbXjq4yUeaSzosM4=
 
 "@types/node@^13.13.2":

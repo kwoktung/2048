@@ -1,5 +1,4 @@
-import * as assert from "assert";
-import { acc, Point, Item, revAcc, flatten } from "../src/point";
+import { Point, Block, backward, flatten, forward } from "../src/point";
 
 function equal<T>(source: T[], target: T[], cmp: (a: T, b: T) => Boolean) {
     if (source.length == 0 && target.length == 0) { return true }
@@ -13,123 +12,84 @@ function equal<T>(source: T[], target: T[], cmp: (a: T, b: T) => Boolean) {
     return true
 }
 
-
-let accOriginalSet = [
-    [1, 2, new Point(0, 0, 0, 2), new Point(0, 0, 1, 4), new Point(0, 0, 2, 8), new Point(0, 0, 3, 16), 3, 4],
-    [1, new Point(0, 0, 0, 2), new Point(0, 0, 1, 2), new Point(0, 0, 2, 8), new Point(0, 0, 3, 16), 2, 3, 4]
-]
-let accExpectSet = [
-    [new Point(0, 0, 0, 2), new Point(0, 0, 1, 4), new Point(0, 0, 2, 8), new Point(0, 0, 3, 16), undefined, undefined, undefined, undefined],
-    [new Point(0, 0, 0, 4), new Point(0, 0, 2, 8), new Point(0, 0, 3, 16), undefined, undefined, undefined, undefined, undefined]
-]
-
-let revAccOriginalSet = [
-    [1, 2, new Point(0, 0, 0, 2), new Point(0, 0, 1, 4), new Point(0, 0, 2, 8), new Point(0, 0, 3, 16), 3, 4],
-    [1, new Point(0, 0, 0, 2), new Point(0, 0, 1, 2), new Point(0, 0, 2, 4), new Point(0, 0, 3, 16), 2, 3, 4]
-]
-
-let recAccExpectSet = [
-    [undefined, undefined, undefined, undefined, new Point(0, 0, 0, 2), new Point(0, 0, 1, 4), new Point(0, 0, 2, 8), new Point(0, 0, 3, 16)],
-    [undefined, undefined, undefined, undefined, undefined, new Point(0, 0, 1, 4), new Point(0, 0, 2, 4), new Point(0, 0, 3, 16) ]
-]
-
-function cmp<Item>(a: Item, b: Item):Boolean {
+function compare<Item>(a: Item, b: Item): Boolean {
     if (a instanceof Point && b instanceof Point) {
-        return a.id == b.id
+        return a.id == b.id && a.val == b.val
     } else if (a instanceof Point && !(b instanceof Point)) {
         return false
-    } else if (!(a instanceof Point) && (b instanceof Point)){
+    } else if (!(a instanceof Point) && (b instanceof Point)) {
         return false
     } else {
         return true
     }
 }
 
-describe('Acc Function', function () {
-    it("Test Route",function() {
-        for (let i = 0; i < accOriginalSet.length; i++) {
-            let item = accOriginalSet[i];
-            let expected = accExpectSet[i]
-            if (!equal(acc(item), expected, cmp)) {
-                throw new Error(`function Acc result do not match expected in Routes ${i}\n`)
+let blockCreator = function (options: { id: number, val: number }): Point {
+    if (options == undefined) { return }
+    let point = new Point(0, 0)
+    point.id = options.id
+    point.val = options.val
+    return point
+}
+
+describe('Forward Function', function () {
+    let routes = [
+        [
+            [, , , , , , { id: 1, val: 2 }],
+            [{ id: 1, val: 2 }, , , , , , ,]
+        ],
+        [
+            [, { id: 1, val: 2 }, , { id: 2, val: 4 }, , { id: 3, val: 8 }, , { id: 4, val: 16 }],
+            [{ id: 1, val: 2 }, { id: 2, val: 4 }, { id: 3, val: 8 }, { id: 4, val: 16 }, , , , ,]
+        ],
+        [
+            [, { id: 1, val: 2 }, , { id: 2, val: 2 }, , { id: 3, val: 8 }, , { id: 4, val: 16 }],
+            [{ id: 1, val: 4 }, { id: 3, val: 8 }, { id: 4, val: 16 }, , , , , ,]
+        ],
+    ]
+    for (let i = 0; i < routes.length; i++) {
+        it(`Test Route #${i}`, function () {
+            let route = routes[i];
+            let input = route[0];
+            input = input.map(n => blockCreator(n))
+            let expected = route[1]
+            expected = expected.map(n => blockCreator(n))
+            let result = forward(input as Block[])
+            if (!equal(result, expected, compare)) {
+                console.log(result, expected)
+                throw new Error("Not Matched")
             }
-        }
-    })
+        })
+    }
 });
 
-describe("RevAcc Function", function() {
-    it("Test Route", function() {
-        for (let i = 0; i < revAccOriginalSet.length; i++) {
-            let item = revAccOriginalSet[i];
-            let expected = recAccExpectSet[i]
-            let result = revAcc(item);
-            if (!equal(result, expected, cmp)) {
-                console.log(item, result)
-                throw new Error(`function revAcc result do not match expected in Routes ${i}`)
+describe('Backward Function', function () {
+    let routes = [
+        [
+            [{ id: 1, val: 2 }, , , , , , ,],
+            [, , , , , , { id: 1, val: 2 }]
+        ],
+        [
+            [, { id: 1, val: 2 }, , { id: 2, val: 4 }, , { id: 3, val: 8 }, , { id: 4, val: 16 }],
+            [, , , ,{ id: 1, val: 2 }, { id: 2, val: 4 }, { id: 3, val: 8 }, { id: 4, val: 16 }]
+        ],
+        [
+            [,{ id: 1, val: 2 }, , { id: 2, val: 2 }, , { id: 3, val: 8 }, , { id: 4, val: 16 }],
+            [, , , , ,{ id: 2, val: 4 }, { id: 3, val: 8 }, { id: 4, val: 16 }]
+        ],
+    ]
+    for (let i = 0; i < routes.length; i++) {
+        it(`Test Route #${i}`, function () {
+            let route = routes[i];
+            let input = route[0];
+            input = input.map(n => blockCreator(n))
+            let expected = route[1]
+            expected = expected.map(n => blockCreator(n))
+            let result = backward(input as Block[])
+            if (!equal(result, expected, compare)) {
+                console.log(result, expected)
+                throw new Error("Not Matched")
             }
-        }
-    })
-})
-
-describe("flatten Function", function() {
-    it("Test Route", function() {
-        let data = [
-            [new Point(1,1,1,1),new Point(5,5,5,5),new Point(9,9,9,9),new Point(13,13,13,13)],
-            [new Point(2,2,2,2),new Point(6,6,6,6),new Point(10,10,10,10),new Point(14,14,14,14)],
-            [new Point(3,3,3,3),new Point(7,7,7,7),new Point(11,11,11,11),new Point(15,15,15,15)],
-            [new Point(4,4,4,4),new Point(8,8,8,8),new Point(12,12,12,12),new Point(16,16,16,16)],
-        ]
-        let expect = [
-            new Point(1,1,1,1),
-            new Point(2,2,2,2),
-            new Point(3,3,3,3),
-            new Point(4,4,4,4),
-            new Point(5,5,5,5),
-            new Point(6,6,6,6),
-            new Point(7,7,7,7),
-            new Point(8,8,8,8),
-            new Point(9,9,9,9),
-            new Point(10,10,10,10),
-            new Point(11,11,11,11),
-            new Point(12,12,12,12),
-            new Point(13,13,13,13),
-            new Point(14,14,14,14),
-            new Point(15,15,15,15),
-            new Point(16,16,16,16)
-        ]
-        let result = flatten(data)
-        if (!equal(result, expect, cmp)) {
-            throw new Error("flatten work unexpected")
-        }
-    })
-    it("Test Route2", function() {
-        let data = [
-            [new Point(1,1,1,1),new Point(5,5,5,5),new Point(9,9,9,9),new Point(13,13,13,13)],
-            [new Point(2,2,2,2)],
-            [new Point(3,3,3,3),new Point(7,7,7,7)],
-            [new Point(4,4,4,4),new Point(8,8,8,8),new Point(12,12,12,12)],
-        ]
-        let expect = [
-            new Point(1,1,1,1),
-            new Point(2,2,2,2),
-            new Point(3,3,3,3),
-            new Point(4,4,4,4),
-            new Point(5,5,5,5),
-            undefined,
-            new Point(7,7,7,7),
-            new Point(8,8,8,8),
-            new Point(9,9,9,9),
-            undefined,
-            undefined,
-            new Point(12,12,12,12),
-            new Point(13,13,13,13),
-            undefined,
-            undefined,
-            undefined
-        ]
-        let result = flatten(data)
-        if (!equal(result, expect, cmp)) {
-            throw new Error("flatten work unexpected")
-        }
-    })
-})
+        })
+    }
+});
