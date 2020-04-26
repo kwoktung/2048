@@ -47,7 +47,7 @@ export function revAcc(itemQueue: Item[]): Point[] {
         }
     }
     if (index != -1) {
-        points.splice(index - 1, 1);
+        points.splice(index + 1, 1);
         points[index].val += points[index].val
     }
     while(points.length < len) {

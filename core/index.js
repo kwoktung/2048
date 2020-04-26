@@ -53,7 +53,7 @@ var Game = (function (exports) {
             }
         }
         if (index != -1) {
-            points.splice(index - 1, 1);
+            points.splice(index + 1, 1);
             points[index].val += points[index].val;
         }
         while (points.length < len) {
@@ -90,21 +90,21 @@ var Game = (function (exports) {
             this.points = new Array(xMax * yMax);
             this.rebase();
         }
-        Game.prototype.debug = function () {
+        Game.prototype.toString = function () {
             var result = [];
             for (var i = 0; i < this.points.length; i++) {
                 if (i % this.xMax == 0) {
                     result.push("\n");
                 }
                 var item = this.points[i];
-                if (typeof item === "number") {
-                    result.push("[*]");
-                }
-                else {
+                if (typeof item === "object") {
                     result.push("[" + item.val + "]");
                 }
+                else {
+                    result.push("[*]");
+                }
             }
-            return console.log(result.join(""));
+            return result.join();
         };
         Game.prototype.spawn = function () {
             this.rebase();
@@ -113,7 +113,7 @@ var Game = (function (exports) {
             var val = points[i];
             var x = val % this.xMax;
             var y = Math.floor(val / this.yMax);
-            this.points[i] = new Point(x, y);
+            this.points[val] = new Point(x, y);
         };
         Game.prototype.classify = function (key) {
             var result = new Array(this.xMax);
