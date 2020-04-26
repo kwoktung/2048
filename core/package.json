@@ -1,0 +1,22 @@
+{
+  "name": "core",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "devDependencies": {
+    "@types/mocha": "^7.0.2",
+    "@types/node": "^13.13.2",
+    "mocha": "^7.1.1",
+    "rollup": "^2.7.2",
+    "ts-node": "^8.9.0",
+    "typescript": "^3.8.3"
+  },
+  "scripts": {
+    "test": "mocha test/**/*.ts",
+    "prerollup": "tsc src/index.ts --outDir ./tmp --module es6 ",
+    "rollup": "rollup tmp/index.js --file index.js --format iife --name Game",
+    "postrollup": "rm -rf tmp"
+  },
+  "author": "",
+  "license": "ISC"
+}
