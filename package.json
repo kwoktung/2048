@@ -1,0 +1,13 @@
+{
+  "name": "2048",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "author": "",
+  "license": "MIT",
+  "workspaces":[
+    "core",
+    "2048-in-vue"
+  ]
+}

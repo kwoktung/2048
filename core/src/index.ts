@@ -1,100 +1,127 @@
 import { Point, Block, forward, backward, flatten } from "./point"
 
-export class Game {
-    private points: Block[];
-    constructor(public xMax: number = 8, public yMax: number = 8) {
-        this.xMax = xMax;
-        this.yMax = yMax;
-        this.points = new Array(xMax * yMax);
-        this.rebase()
-    }
-    toString() {
-        let result = []
-        for (let i = 0; i < this.points.length; i++) {
-            if (i % this.xMax == 0) {
-                result.push("\n")
-            }
-            let item = this.points[i];
-            if (typeof item === "object") {
-                result.push(`[${item.val}]`)
-            } else {
-                result.push("[*]")
-            }
+export type State = { alts: Point[], elements: Point[] }
+
+export default class Controller {
+  private elements: Block[];
+  constructor(public xMax: number = 8, public yMax: number = 8) {
+    this.elements = new Array(xMax * yMax);
+    this.onRebase()
+  }
+  doSpawn(): State {
+    this.onRebase()
+    let elements = this.elements.filter(e => typeof e === "number");
+    let i = Math.floor(Math.random() * elements.length)
+    let val = elements[i] as number
+    let x = val % this.xMax;
+    let y = Math.floor(val / this.yMax)
+    this.elements[val] = new Point(x, y)
+    return this.state
+  }
+  private onRank(key: 'x'|'y'): Point[][] {
+    let result = new Array(this.xMax);
+    let points = this.elements;
+    for (let i = 0; i < points.length; i += 1) {
+      let point = points[i];
+      if (point instanceof Point) {
+        let prop = point[key];
+        if (!result[prop]) {
+          result[prop] = []
         }
-        return result.join()
+        result[prop].push(point.clone())
+      }
     }
-    spawn() {
-        this.rebase()
-        let points = this.points.filter(point => typeof point === "number");
-        let i = Math.floor(Math.random() * points.length)
-        let val = points[i] as number
-        let x = val % this.xMax;
-        let y = Math.floor(val / this.yMax)
-        this.points[val] = new Point(x, y)
+    return result
+  }
+  private onRebase() {
+    for (let i = 0; i < this.elements.length; i++) {
+      let point = this.elements[i];
+      if (typeof point == "object") {
+        point.location(i, this.xMax)
+      } else {
+        this.elements[i] = i;
+      }
     }
-    private classify(key: string) {
-        let result = new Array(this.xMax);
-        let points = this.points;
-        for (let i = 0; i < points.length; i += 1) {
-            let point = points[i];
-            if (typeof point == "object") {
-                let prop = point[key];
-                if (!result[prop]) {
-                    result[prop] = []
-                }
-                result[prop].push(point)
-            }
+  }
+  onLeft(): State {
+    let rows = this.onRank("y")
+    for (let i = 0; i < rows.length; i++) {
+      let row = rows[i] || [];
+      row.length = this.xMax;
+      rows[i] = forward(row)
+    }
+    this.elements = rows.reduce((a, b) => a.concat(b), [])
+    return this.state
+  }
+  onRight(): State {
+    let rows = this.onRank("y")
+    for (let i = 0; i < rows.length; i++) {
+      let row = rows[i] || [];
+      row.length = this.xMax;
+      rows[i] = backward(row)
+    }
+    this.elements = rows.reduce((a, b) => a.concat(b), [])
+    return this.state
+  }
+  onUp(): State {
+    let columns = this.onRank("x");
+    for (let i = 0; i < columns.length; i++) {
+      let column = columns[i] || [];
+      column.length = this.yMax;
+      columns[i] = forward(column)
+    }
+    this.elements = flatten(columns)
+    return this.state
+  }
+  onDown(): State {
+    let columns = this.onRank("x");
+    for (let i = 0; i < columns.length; i++) {
+      let column = columns[i] || [];
+      column.length = this.yMax;
+      columns[i] = backward(column)
+    }
+    this.elements = flatten(columns)
+    return this.state
+  }
+  isOver() {
+    let len = this.elements.filter(e => !(e instanceof Point)).length
+    if (len > 0) { return false }
+    const isValid = function (elements: Point[]) {
+      if (elements.length <= 1) { return true }
+      for(let i = 0; i < elements.length - 1; i++) {
+        let current = elements[i];
+        let next = elements[i +1 ];
+        if (current.val == next.val) {
+          return true
         }
-        return result
+      }
+      return false
     }
-    private rebase() {
-        for (let i = 0; i < this.points.length; i++) {
-            let point = this.points[i];
-            if (typeof point == "object") {
-                point.location(i, this.xMax)
-            } else {
-                this.points[i] = i;
-            }
-        }
+    let elements = this.onRank("y");
+    for(let i = 0; i < elements.length; i++) {
+      let elem = <Point[]>elements[i];
+      if (isValid(elem)) { return false }
     }
-    left() {
-        let rows = this.classify("y")
-        for (let i = 0; i < rows.length; i++) {
-            let row = rows[i] || [];
-            row.length = this.xMax;
-            rows[i] = forward(row)
-        }
-        this.points = rows.reduce((acc, item) => acc.concat(item), [])
-        this.spawn()
+    elements = this.onRank("x");
+    for(let i = 0; i < elements.length; i++) {
+      let elem = <Point[]>elements[i];
+      if (isValid(elem)) { return false }
     }
-    right() {
-        let rows = this.classify("y")
-        for (let i = 0; i < rows.length; i++) {
-            let row = rows[i] || [];
-            row.length = this.xMax;
-            rows[i] = backward(row)
-        }
-        this.points = rows.reduce((acc, item) => acc.concat(item), [])
-        this.spawn()
+    return true
+  }
+  get state(): State {
+    this.onRebase();
+    let alts = []
+    let elements = this.elements.filter(e => e instanceof Point) as Point[];
+    for(let i = 0, len = elements.length; i < len; i ++) {
+      const elem = elements[i];
+      if (elem.alt){
+        elem.alt.x = elem.x;
+        elem.alt.y = elem.y;
+        alts.push(elem.alt)
+      }
     }
-    up() {
-        let columns = this.classify("x");
-        for (let i = 0; i < columns.length; i++) {
-            let column = columns[i] || [];
-            column.length = this.yMax;
-            columns[i] = forward(column)
-        }
-        this.points = flatten(columns)
-        this.spawn()
-    }
-    down() {
-        let columns = this.classify("x");
-        for (let i = 0; i < columns.length; i++) {
-            let column = columns[i] || [];
-            column.length = this.yMax;
-            columns[i] = backward(column)
-        }
-        this.points = flatten(columns)
-        this.spawn()
-    }
+    elements = elements.sort((a, b) => a.id < b.id ? -1: 1)
+    return { alts, elements } 
+  }
 }
