@@ -2,20 +2,26 @@
   <div id="app">
     <div class="container">
       <div class="static">
-        <div class="element" v-for="i in 64" :key="i"></div>
+        <div class="element" v-for="i in len * len" :key="i" :style="{ width: unit + 'vw', height: unit + 'vw' }">
+          <div class="el"></div>
+        </div>
       </div>
       <div class="dynamic" @transitionend="onTransitionEnd">
         <div
           v-for="point in points"
           :key="point.id"
-          :style="{ top: point.y*11 +'vw', left: point.x*11 + 'vw' }"
+          :style="{ top: point.y*unit +'vw', left: point.x*unit + 'vw', width: unit + 'vw', height: unit + 'vw' }"
           class="point"
         >
-          <span>{{point.val}}</span>
+          <div class="el">{{point.val}}</div>
         </div>
       </div>
     </div>
     <div class="btn" @click="onStart">{{isStarted?'Restart':'Start'}}</div>
+    <div class="end-mask" v-if="end">
+      <div>Game Over</div>
+      <div  @click="end=false;onStart()">Restart Now!!</div>
+    </div>
   </div>
 </template>
 <script>
@@ -43,10 +49,11 @@ export default {
   name: "App",
   data() {
     return {
-      len: 64,
+      len: 4,
       isStarted: false,
       elements: [],
-      alts: []
+      alts: [],
+      end: false
     };
   },
   computed: {
@@ -65,10 +72,12 @@ export default {
     },
     onNext(elements, alts) {
       this.fns.push(function() {
+        if (alts.length) { this.onPlay() }
         alts.forEach(e => (e.alt.val += e.alt.val));
         this.alts = [];
         const { elements } = this.e.doSpawn();
         this.elements = elements;
+        this.end = this.e.isOver()
       });
     },
     onLeft() {
@@ -117,20 +126,25 @@ export default {
     },
     onStart() {
       if (this.isStarted) {
-        this.e = new Core();
+        this.e = new Core(this.len, this.len);
       } else {
         this.isStarted = true;
         this.onEvent();
       }
       const { elements } = this.e.doSpawn();
       this.elements = elements;
+    },
+    onPlay() {
+      this.player && this.player.play()
     }
   },
   created() {
-    this.e = new Core();
+    this.e = new Core(this.len, this.len);
     this.fns = [];
-    this.int = false
     this.onTransitionEnd = debounce(this.onTransitionEnd, 10);
+    this.unit = 88/this.len;
+
+    this.player = document.getElementById("player")
   }
 };
 </script>
@@ -156,6 +170,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  position: relative;
 }
 .container {
   display: flex;
@@ -163,6 +178,21 @@ body {
   justify-content: center;
   width: 88vw;
   position: relative;
+}
+.end-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-weight: 700;
+  font-size: 24px
 }
 .static,
 .dynamic {
@@ -184,24 +214,36 @@ body {
 }
 .element,
 .point {
-  width: 10vw;
-  height: 10vw;
-  border-radius: 3px;
   box-sizing: border-box;
-  margin: 0.5vw;
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .element {
-  background-color: #f3e1e1;
+  background-color: #faf2f2;
 }
 .point {
   position: absolute;
-  background-color: #7d5a5a;
-  color: #f3e1e1;
   transition: all .5s ease;
+}
+.element .el {
+  width: 90%;
+  height: 90%;
+  border-radius: 3px;
+  background-color: #f3e1e1;
+}
+.point .el {
+  width: 90%;
+  height: 90%;
+  border-radius: 3px;
+  background-color: #7d5a5a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #f3e1e1;
+  font-size: 24px;
+  font-weight: 700;
 }
 .btn {
   margin: 10vw auto 10vw;

@@ -83,7 +83,7 @@ export default class Controller {
     this.elements = flatten(columns)
     return this.state
   }
-  isOver() {
+  isOver(): Boolean {
     let len = this.elements.filter(e => !(e instanceof Point)).length
     if (len > 0) { return false }
     const isValid = function (elements: Point[]) {
