@@ -8,6 +8,7 @@
   "license": "MIT",
   "workspaces":[
     "core",
-    "2048-in-vue"
+    "2048-in-vue",
+    "2048-in-react"
   ]
 }
