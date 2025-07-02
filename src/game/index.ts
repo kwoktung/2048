@@ -1,8 +1,9 @@
-import { Point, Block, forward, backward, flatten } from "./point"
+import { Point, forward, backward, flatten } from "./point"
+import type { Block } from "./point"
 
 export type State = { alts: Point[], elements: Point[] }
 
-export default class Controller {
+export class Game {
   private elements: Block[];
   constructor(public xMax: number = 8, public yMax: number = 8) {
     this.elements = new Array(xMax * yMax);
@@ -10,21 +11,21 @@ export default class Controller {
   }
   doSpawn(): State {
     this.onRebase()
-    let elements = this.elements.filter(e => typeof e === "number");
-    let i = Math.floor(Math.random() * elements.length)
-    let val = elements[i] as number
-    let x = val % this.xMax;
-    let y = Math.floor(val / this.yMax)
+    const elements = this.elements.filter(e => typeof e === "number");
+    const i = Math.floor(Math.random() * elements.length)
+    const val = elements[i] as number
+    const x = val % this.xMax;
+    const y = Math.floor(val / this.yMax)
     this.elements[val] = new Point(x, y)
     return this.state
   }
   private onRank(key: 'x'|'y'): Point[][] {
-    let result = new Array(this.xMax);
-    let points = this.elements;
+    const result = new Array(this.xMax);
+    const points = this.elements;
     for (let i = 0; i < points.length; i += 1) {
-      let point = points[i];
+      const point = points[i];
       if (point instanceof Point) {
-        let prop = point[key];
+        const prop = point[key];
         if (!result[prop]) {
           result[prop] = []
         }
@@ -35,7 +36,7 @@ export default class Controller {
   }
   private onRebase() {
     for (let i = 0; i < this.elements.length; i++) {
-      let point = this.elements[i];
+      const point = this.elements[i];
       if (typeof point == "object") {
         point.location(i, this.xMax)
       } else {
@@ -44,9 +45,9 @@ export default class Controller {
     }
   }
   onLeft(): State {
-    let rows = this.onRank("y")
+    const rows = this.onRank("y")
     for (let i = 0; i < rows.length; i++) {
-      let row = rows[i] || [];
+      const row = rows[i] || [];
       row.length = this.xMax;
       rows[i] = forward(row)
     }
@@ -54,19 +55,19 @@ export default class Controller {
     return this.state
   }
   onRight(): State {
-    let rows = this.onRank("y")
+    const rows = this.onRank("y")
     for (let i = 0; i < rows.length; i++) {
-      let row = rows[i] || [];
+      const row = rows[i] || [];
       row.length = this.xMax;
-      rows[i] = backward(row)
+      rows[i] = backward(row) as Point[]
     }
     this.elements = rows.reduce((a, b) => a.concat(b), [])
     return this.state
   }
   onUp(): State {
-    let columns = this.onRank("x");
+    const columns = this.onRank("x");
     for (let i = 0; i < columns.length; i++) {
-      let column = columns[i] || [];
+      const column = columns[i] || [];
       column.length = this.yMax;
       columns[i] = forward(column)
     }
@@ -74,23 +75,23 @@ export default class Controller {
     return this.state
   }
   onDown(): State {
-    let columns = this.onRank("x");
+    const columns = this.onRank("x");
     for (let i = 0; i < columns.length; i++) {
-      let column = columns[i] || [];
+      const column = columns[i] || [];
       column.length = this.yMax;
-      columns[i] = backward(column)
+      columns[i] = backward(column) as Point[]
     }
     this.elements = flatten(columns)
     return this.state
   }
-  isOver(): Boolean {
-    let len = this.elements.filter(e => !(e instanceof Point)).length
+  isOver(): boolean {
+    const len = this.elements.filter(e => !(e instanceof Point)).length
     if (len > 0) { return false }
     const isValid = function (elements: Point[]) {
       if (elements.length <= 1) { return true }
       for(let i = 0; i < elements.length - 1; i++) {
-        let current = elements[i];
-        let next = elements[i +1 ];
+        const current = elements[i];
+        const next = elements[i +1 ];
         if (current.val == next.val) {
           return true
         }
@@ -99,19 +100,19 @@ export default class Controller {
     }
     let elements = this.onRank("y");
     for(let i = 0; i < elements.length; i++) {
-      let elem = <Point[]>elements[i];
+      const elem = <Point[]>elements[i];
       if (isValid(elem)) { return false }
     }
     elements = this.onRank("x");
     for(let i = 0; i < elements.length; i++) {
-      let elem = <Point[]>elements[i];
+      const elem = <Point[]>elements[i];
       if (isValid(elem)) { return false }
     }
     return true
   }
   get state(): State {
     this.onRebase();
-    let alts = []
+    const alts = []
     let elements = this.elements.filter(e => e instanceof Point) as Point[];
     for(let i = 0, len = elements.length; i < len; i ++) {
       const elem = elements[i];
