@@ -4,15 +4,24 @@ import { Game } from "./game";
 import type { State } from "./game";
 import { Point } from "./game/point";
 
-function debounce(fn: () => void, ms: number) {
-  let lastTime = 0;
-  return function () {
-    const now = Date.now();
-    if (now - lastTime > ms) {
-      fn();
-      lastTime = now;
-    }
-  };
+function useDebounceCallback<T extends (...args: unknown[]) => void>(
+  callback: T,
+  delay: number
+): T {
+  const timeoutRef = useRef<number | null>(null);
+
+  return useCallback(
+    (...args: Parameters<T>) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = window.setTimeout(() => {
+        callback(...args);
+      }, delay);
+    },
+    [callback, delay]
+  ) as T;
 }
 
 function isEqual(prev: Point[], next: Point[]) {
@@ -55,9 +64,7 @@ const App: React.FC = () => {
     currentFns.forEach((fn) => fn());
   }, []);
 
-  const debouncedOnTransitionEnd = useCallback(debounce(onTransitionEnd, 10), [
-    onTransitionEnd,
-  ]);
+  const debouncedOnTransitionEnd = useDebounceCallback(onTransitionEnd, 10);
 
   const onBindEvent = useCallback(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -150,14 +157,18 @@ const App: React.FC = () => {
       <div
         className="element"
         key={i}
-        style={{ width: 88 / len + "vw", height: 88 / len + "vw" }}
+        style={{
+          width: 88 / len + "vw",
+          height: 88 / len + "vw",
+          aspectRatio: "1 / 1",
+        }}
       >
         <div className="el"></div>
       </div>
     );
   });
 
-  const points = ([] as Point[])
+  const points: Point[] = ([] as Point[])
     .concat(state.elements)
     .concat(state.alts)
     .sort((a: Point, b: Point) => (a.id < b.id ? -1 : 1));
@@ -167,9 +178,10 @@ const App: React.FC = () => {
       className="point"
       style={{
         width: 88 / len + "vw",
-        height: 88 / len + "vw",
+        // height: 88 / len + "vw",
         top: (e.y * 88) / len + "vw",
         left: (e.x * 88) / len + "vw",
+        aspectRatio: "1 / 1",
       }}
     >
       <div className="el">{e.val}</div>
@@ -177,7 +189,7 @@ const App: React.FC = () => {
   ));
 
   return (
-    <div className="app">
+    <div className="main">
       <div className="container">
         <div className="static">{es}</div>
         <div className="dynamic" onTransitionEnd={debouncedOnTransitionEnd}>

@@ -17,6 +17,9 @@ export class Point {
     cloned.id = this.id;
     return cloned
   }
+  isSame(other: Point) {
+    return this.x === other.x && this.y === other.y && this.val === other.val
+  }
 }
 
 export type Block = Point | number | undefined;
