@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import "./App.css";
+import "./index.css";
 import { Game } from "./game";
 import type { State } from "./game";
 import { Point } from "./game/point";
@@ -92,6 +92,10 @@ function useSwipeDetection(
     [onSwipe, isActive]
   );
 
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    e.preventDefault();
+  }, []);
+
   useEffect(() => {
     if (!isActive) return;
 
@@ -99,12 +103,14 @@ function useSwipeDetection(
       passive: true,
     });
     document.addEventListener("touchend", handleTouchEnd, { passive: true });
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
 
     return () => {
       document.removeEventListener("touchstart", handleTouchStart);
       document.removeEventListener("touchend", handleTouchEnd);
+      document.removeEventListener("touchmove", handleTouchMove);
     };
-  }, [handleTouchStart, handleTouchEnd, isActive]);
+  }, [handleTouchStart, handleTouchEnd, handleTouchMove, isActive]);
 }
 
 const App: React.FC = () => {
@@ -260,7 +266,7 @@ const App: React.FC = () => {
   const es = list.map((_, i) => {
     return (
       <div
-        className="element"
+        className="element box-border relative flex justify-center items-center"
         key={i}
         style={{
           width: 100 / len + "%",
@@ -268,7 +274,7 @@ const App: React.FC = () => {
           aspectRatio: "1 / 1",
         }}
       >
-        <div className="el"></div>
+        <div className="w-[90%] h-[90%] rounded bg-[#f3e1e1]"></div>
       </div>
     );
   });
@@ -280,7 +286,7 @@ const App: React.FC = () => {
   const elements = points.map((e) => (
     <div
       key={e.id}
-      className="point"
+      className="box-border absolute flex justify-center items-center transition-all duration-500 ease-in-out"
       style={{
         width: 100 / len + "%",
         top: (e.y * 100) / len + "%",
@@ -288,7 +294,9 @@ const App: React.FC = () => {
         aspectRatio: "1 / 1",
       }}
     >
-      <div className="el">{e.val}</div>
+      <div className="w-[90%] h-[90%] rounded bg-[#7d5a5a] flex justify-center items-center text-[#f3e1e1] text-2xl font-bold">
+        {e.val}
+      </div>
     </div>
   ));
 
@@ -297,24 +305,34 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="main">
-      <div className="audio-control">
+    <div className="main font-sans antialiased text-center text-[#2c3e50] w-full max-w-[600px] mx-auto h-full flex flex-col justify-center items-center relative p-[10px] box-border select-none [touch-action:manipulation] bg-[#4a2c2c]">
+      <div className="flex justify-between items-center w-full mb-5">
+        <div className="bg-[#f1d1d1] text-[#2c3e50] px-5 py-[10px] rounded-lg text-lg font-semibold shadow">
+          Score: {state.score}
+        </div>
         <button
-          className="audio-btn"
+          className="border-0 rounded-full w-[50px] h-[50px] text-xl cursor-pointer flex justify-center items-center bg-white shadow transition-all duration-200 hover:bg-[#e8c8c8] hover:scale-105 active:scale-95"
           onClick={toggleAudio}
           aria-label={audioEnabled ? "Mute audio" : "Unmute audio"}
         >
           {audioEnabled ? "🔊" : "🔇"}
         </button>
       </div>
-      <div className="score-display">Score: {state.score}</div>
-      <div className="container">
-        <div className="static">{es}</div>
-        <div className="dynamic" onTransitionEnd={debouncedOnTransitionEnd}>
+      <div className="flex items-center justify-center w-full aspect-square relative rounded overflow-hidden [touch-action:manipulation]">
+        <div className="flex flex-row w-full h-full flex-wrap relative bg-[#faf2f2]">
+          {es}
+        </div>
+        <div
+          className="flex flex-row w-full h-full flex-wrap absolute inset-0"
+          onTransitionEnd={debouncedOnTransitionEnd}
+        >
           {elements}
         </div>
       </div>
-      <div className="btn" onClick={onStart}>
+      <div
+        className="mt-[10px] rounded-sm h-[8vh] min-h-[40px] w-full flex justify-center items-center bg-[#f1d1d1] text-xl font-semibold cursor-pointer"
+        onClick={onStart}
+      >
         {state.isStarted ? "Restart" : "Start"}
       </div>
     </div>
