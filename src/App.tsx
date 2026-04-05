@@ -113,6 +113,37 @@ function useSwipeDetection(
   }, [handleTouchStart, handleTouchEnd, handleTouchMove, isActive]);
 }
 
+function SoundOnIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+      <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM18.584 5.106a.75.75 0 0 1 1.06 0c3.808 3.807 3.808 9.98 0 13.788a.75.75 0 0 1-1.06-1.06 8.25 8.25 0 0 0 0-11.668.75.75 0 0 1 0-1.06Z" />
+      <path d="M15.932 7.757a.75.75 0 0 1 1.061 0 6 6 0 0 1 0 8.486.75.75 0 0 1-1.06-1.061 4.5 4.5 0 0 0 0-6.364.75.75 0 0 1 0-1.06Z" />
+    </svg>
+  );
+}
+
+function SoundOffIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
+      <path d="M13.5 4.06c0-1.336-1.616-2.005-2.56-1.06l-4.5 4.5H4.508c-1.141 0-2.318.664-2.66 1.905A9.76 9.76 0 0 0 1.5 12c0 .898.121 1.768.35 2.595.341 1.24 1.518 1.905 2.659 1.905h1.93l4.5 4.5c.945.945 2.561.276 2.561-1.06V4.06ZM17.78 9.22a.75.75 0 1 0-1.06 1.06L18.44 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L19.5 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L20.56 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L19.5 10.94l-1.72-1.72Z" />
+    </svg>
+  );
+}
+
+function getTileStyle(val: number): { bg: string; text: string } {
+  if (val <= 2)   return { bg: "#FFF9C4", text: "#78550A" };
+  if (val <= 4)   return { bg: "#FFE082", text: "#78550A" };
+  if (val <= 8)   return { bg: "#FFB74D", text: "#fff" };
+  if (val <= 16)  return { bg: "#FF8A65", text: "#fff" };
+  if (val <= 32)  return { bg: "#FF7043", text: "#fff" };
+  if (val <= 64)  return { bg: "#F4511E", text: "#fff" };
+  if (val <= 128) return { bg: "#FFD740", text: "#78550A" };
+  if (val <= 256) return { bg: "#FFC400", text: "#78550A" };
+  if (val <= 512) return { bg: "#FF9100", text: "#fff" };
+  if (val <= 1024) return { bg: "#FF6D00", text: "#fff" };
+  return { bg: "#DD2C00", text: "#fff" };
+}
+
 const App: React.FC = () => {
   const len = 4;
   const fns = useRef<(() => void)[]>([]);
@@ -274,7 +305,7 @@ const App: React.FC = () => {
           aspectRatio: "1 / 1",
         }}
       >
-        <div className="w-[90%] h-[90%] rounded bg-[#f3e1e1]"></div>
+        <div className="w-[90%] h-[90%] rounded-xl bg-[#F5E6C8]"></div>
       </div>
     );
   });
@@ -294,7 +325,10 @@ const App: React.FC = () => {
         aspectRatio: "1 / 1",
       }}
     >
-      <div className="w-[90%] h-[90%] rounded bg-[#7d5a5a] flex justify-center items-center text-[#f3e1e1] text-2xl font-bold">
+      <div
+          className={`w-[90%] h-[90%] rounded-xl flex justify-center items-center font-bold shadow-sm ${String(e.val).length >= 4 ? "text-lg" : String(e.val).length === 3 ? "text-xl" : "text-2xl"}`}
+          style={{ backgroundColor: getTileStyle(e.val).bg, color: getTileStyle(e.val).text }}
+        >
         {e.val}
       </div>
     </div>
@@ -305,21 +339,21 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <div className="main font-sans antialiased text-center text-[#2c3e50] w-full max-w-[600px] mx-auto h-full flex flex-col justify-center items-center relative p-[10px] box-border select-none [touch-action:manipulation] bg-[#4a2c2c]">
-      <div className="flex justify-between items-center w-full mb-5">
-        <div className="bg-[#f1d1d1] text-[#2c3e50] px-5 py-[10px] rounded-lg text-lg font-semibold shadow">
+    <div className="main antialiased text-center w-full max-w-[600px] mx-auto h-full flex flex-col justify-center items-center relative p-[16px] box-border select-none [touch-action:manipulation] bg-[#FFF8F0]" style={{ fontFamily: "'Nunito', sans-serif" }}>
+      <div className="flex justify-between items-center w-full mb-4">
+        <div className="bg-[#F5A623] text-white px-5 py-2 rounded-2xl text-lg font-bold shadow-md">
           Score: {state.score}
         </div>
         <button
-          className="border-0 rounded-full w-[50px] h-[50px] text-xl cursor-pointer flex justify-center items-center bg-white shadow transition-all duration-200 hover:bg-[#e8c8c8] hover:scale-105 active:scale-95"
+          className="border-0 rounded-full w-[50px] h-[50px] text-xl cursor-pointer flex justify-center items-center bg-[#F5A623] text-white shadow-md transition-all duration-200 hover:bg-[#E09520] hover:scale-105 active:scale-95"
           onClick={toggleAudio}
           aria-label={audioEnabled ? "Mute audio" : "Unmute audio"}
         >
-          {audioEnabled ? "🔊" : "🔇"}
+          {audioEnabled ? <SoundOnIcon /> : <SoundOffIcon />}
         </button>
       </div>
-      <div className="flex items-center justify-center w-full aspect-square relative rounded overflow-hidden [touch-action:manipulation]">
-        <div className="flex flex-row w-full h-full flex-wrap relative bg-[#faf2f2]">
+      <div className="flex items-center justify-center w-full aspect-square relative rounded-2xl overflow-hidden shadow-lg [touch-action:manipulation]">
+        <div className="flex flex-row w-full h-full flex-wrap relative bg-[#C9956C]">
           {es}
         </div>
         <div
@@ -330,7 +364,7 @@ const App: React.FC = () => {
         </div>
       </div>
       <div
-        className="mt-[10px] rounded-sm h-[8vh] min-h-[40px] w-full flex justify-center items-center bg-[#f1d1d1] text-xl font-semibold cursor-pointer"
+        className="mt-3 rounded-2xl h-[8vh] min-h-[48px] w-full flex justify-center items-center bg-[#F5A623] hover:bg-[#E09520] active:bg-[#CC8510] text-white text-xl font-bold cursor-pointer shadow-md transition-all duration-200"
         onClick={onStart}
       >
         {state.isStarted ? "Restart" : "Start"}
