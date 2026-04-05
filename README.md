@@ -25,12 +25,14 @@ A modern, responsive implementation of the classic 2048 puzzle game built with R
 ### Installation
 
 1. Clone the repository:
+
    ```bash
    git clone <repository-url>
    cd 2048
    ```
 
 2. Install dependencies:
+
    ```bash
    npm install
    # or
@@ -38,6 +40,7 @@ A modern, responsive implementation of the classic 2048 puzzle game built with R
    ```
 
 3. Start the development server:
+
    ```bash
    npm run dev
    # or
@@ -106,6 +109,7 @@ The game includes sound effects that play when tiles merge, enhancing the gaming
 ## 📱 Browser Support
 
 This game works on all modern browsers that support:
+
 - ES6+ JavaScript features
 - CSS Grid and Flexbox
 - HTML5 Audio API

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "commit": {
+      "source": "kwoktung/skills",
+      "sourceType": "github",
+      "computedHash": "5c2ad0db8abe5eb049debd771c23c816a633501f2ee10876193c41bbd083870a"
+    },
+    "diff-summary": {
+      "source": "kwoktung/skills",
+      "sourceType": "github",
+      "computedHash": "d7d778d16903890619244fbfdf982e45f59e9072ff34de013f66db1f826ea08f"
+    }
+  }
+}
