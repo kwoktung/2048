@@ -1,23 +1,26 @@
-import { Point, forward, backward, flatten } from "./point"
-import type { Block } from "./point"
+import { Tile, moveAndMergeLeft, moveAndMergeRight, convertGridToBoard } from "./tile";
+import type { BoardCell } from "./tile";
 
 /**
  * Represents the current state of the 2048 game
  */
-export type State = { 
-  alts: Point[],    // Alternative points for animations
-  elements: Point[] // Current game elements
-}
+export type State = {
+  mergingTiles: Tile[]; // Tiles involved in merge animations
+  tiles: Tile[]; // Active tiles on the board
+};
 
 /**
  * 2048 Game implementation
  * Manages the game board, moves, spawning, and game state
  */
 export class Game {
-  private board: Block[];
+  private board: BoardCell[];
   private readonly boardSize: number;
 
-  constructor(public readonly width: number = 8, public readonly height: number = 8) {
+  constructor(
+    public readonly width: number = 8,
+    public readonly height: number = 8
+  ) {
     this.boardSize = width * height;
     this.board = new Array(this.boardSize);
     this.initializeBoard();
@@ -29,10 +32,10 @@ export class Game {
    */
   spawnNewTile(): State {
     this.updateBoardIndices();
-    
+
     // Find all empty positions
-    const emptyPositions = this.board.filter(position => typeof position === "number");
-    
+    const emptyPositions = this.board.filter((cell) => typeof cell === "number");
+
     if (emptyPositions.length === 0) {
       return this.getState();
     }
@@ -40,14 +43,14 @@ export class Game {
     // Choose random empty position
     const randomIndex = Math.floor(Math.random() * emptyPositions.length);
     const positionIndex = emptyPositions[randomIndex] as number;
-    
+
     // Calculate grid coordinates
     const x = positionIndex % this.width;
     const y = Math.floor(positionIndex / this.height);
-    
-    // Create new tile
-    this.board[positionIndex] = new Point(x, y);
-    
+
+    // Place new tile
+    this.board[positionIndex] = new Tile(x, y);
+
     return this.getState();
   }
 
@@ -57,15 +60,13 @@ export class Game {
    */
   moveLeft(): State {
     const rows = this.getRows();
-    
+
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
       const row = rows[rowIndex] || [];
-      // Ensure row has correct length
       row.length = this.width;
-      // Apply leftward movement and merging
-      rows[rowIndex] = forward(row);
+      rows[rowIndex] = moveAndMergeLeft(row);
     }
-    
+
     this.updateBoardFromRows(rows);
     return this.getState();
   }
@@ -76,15 +77,13 @@ export class Game {
    */
   moveRight(): State {
     const rows = this.getRows();
-    
+
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
       const row = rows[rowIndex] || [];
-      // Ensure row has correct length
       row.length = this.width;
-      // Apply rightward movement and merging
-      rows[rowIndex] = backward(row) as Point[];
+      rows[rowIndex] = moveAndMergeRight(row) as Tile[];
     }
-    
+
     this.updateBoardFromRows(rows);
     return this.getState();
   }
@@ -95,15 +94,13 @@ export class Game {
    */
   moveUp(): State {
     const columns = this.getColumns();
-    
+
     for (let columnIndex = 0; columnIndex < columns.length; columnIndex++) {
       const column = columns[columnIndex] || [];
-      // Ensure column has correct length
       column.length = this.height;
-      // Apply upward movement and merging
-      columns[columnIndex] = forward(column);
+      columns[columnIndex] = moveAndMergeLeft(column);
     }
-    
+
     this.updateBoardFromColumns(columns);
     return this.getState();
   }
@@ -114,15 +111,13 @@ export class Game {
    */
   moveDown(): State {
     const columns = this.getColumns();
-    
+
     for (let columnIndex = 0; columnIndex < columns.length; columnIndex++) {
       const column = columns[columnIndex] || [];
-      // Ensure column has correct length
       column.length = this.height;
-      // Apply downward movement and merging
-      columns[columnIndex] = backward(column) as Point[];
+      columns[columnIndex] = moveAndMergeRight(column) as Tile[];
     }
-    
+
     this.updateBoardFromColumns(columns);
     return this.getState();
   }
@@ -132,16 +127,16 @@ export class Game {
    * @returns true if game is over, false otherwise
    */
   isGameOver(): boolean {
-    // If there are empty positions, game is not over
-    const emptyPositions = this.board.filter(position => !(position instanceof Point));
-    if (emptyPositions.length > 0) {
+    // If there are empty cells, game is not over
+    const emptyCells = this.board.filter((cell) => !(cell instanceof Tile));
+    if (emptyCells.length > 0) {
       return false;
     }
 
     // Check if any merges are possible in rows
     const rows = this.getRows();
     for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
-      const row = rows[rowIndex] as Point[];
+      const row = rows[rowIndex] as Tile[];
       if (this.canMergeInLine(row)) {
         return false;
       }
@@ -150,7 +145,7 @@ export class Game {
     // Check if any merges are possible in columns
     const columns = this.getColumns();
     for (let columnIndex = 0; columnIndex < columns.length; columnIndex++) {
-      const column = columns[columnIndex] as Point[];
+      const column = columns[columnIndex] as Tile[];
       if (this.canMergeInLine(column)) {
         return false;
       }
@@ -161,7 +156,7 @@ export class Game {
 
   /**
    * Gets the current game state
-   * @returns Current game state with elements and alternative points
+   * @returns Current game state with tiles and merging tiles
    */
   get state(): State {
     return this.getState();
@@ -173,8 +168,8 @@ export class Game {
    */
   getScore(): number {
     return this.board
-      .filter(position => position instanceof Point)
-      .reduce((score, position) => score + (position as Point).val, 0);
+      .filter((cell) => cell instanceof Tile)
+      .reduce((score, cell) => score + (cell as Tile).value, 0);
   }
 
   // Private helper methods
@@ -193,12 +188,10 @@ export class Game {
    */
   private updateBoardIndices(): void {
     for (let i = 0; i < this.board.length; i++) {
-      const position = this.board[i];
-      if (position instanceof Point) {
-        // Update point's internal position tracking
-        position.location(i, this.width);
+      const cell = this.board[i];
+      if (cell instanceof Tile) {
+        cell.updatePosition(i, this.width);
       } else {
-        // Set empty position to its index
         this.board[i] = i;
       }
     }
@@ -206,118 +199,105 @@ export class Game {
 
   /**
    * Gets all rows from the board
-   * @returns Array of rows, each containing points for that row
+   * @returns Array of rows, each containing tiles for that row
    */
-  private getRows(): Point[][] {
-    const rows: Point[][] = new Array(this.height);
-    
+  private getRows(): Tile[][] {
+    const rows: Tile[][] = new Array(this.height);
+
     for (let i = 0; i < this.board.length; i++) {
-      const position = this.board[i];
-      if (position instanceof Point) {
-        const rowIndex = position.y;
+      const cell = this.board[i];
+      if (cell instanceof Tile) {
+        const rowIndex = cell.y;
         if (!rows[rowIndex]) {
           rows[rowIndex] = [];
         }
-        rows[rowIndex].push(position.clone());
+        rows[rowIndex].push(cell.clone());
       }
     }
-    
+
     return rows;
   }
 
   /**
    * Gets all columns from the board
-   * @returns Array of columns, each containing points for that column
+   * @returns Array of columns, each containing tiles for that column
    */
-  private getColumns(): Point[][] {
-    const columns: Point[][] = new Array(this.width);
-    
+  private getColumns(): Tile[][] {
+    const columns: Tile[][] = new Array(this.width);
+
     for (let i = 0; i < this.board.length; i++) {
-      const position = this.board[i];
-      if (position instanceof Point) {
-        const columnIndex = position.x;
+      const cell = this.board[i];
+      if (cell instanceof Tile) {
+        const columnIndex = cell.x;
         if (!columns[columnIndex]) {
           columns[columnIndex] = [];
         }
-        columns[columnIndex].push(position.clone());
+        columns[columnIndex].push(cell.clone());
       }
     }
-    
+
     return columns;
   }
 
   /**
    * Updates the board from processed rows
-   * @param rows Processed rows to update the board with
    */
-  private updateBoardFromRows(rows: Point[][]): void {
-    this.board = rows.reduce((board, row) => board.concat(row), [] as Point[]);
+  private updateBoardFromRows(rows: Tile[][]): void {
+    this.board = rows.reduce((board, row) => board.concat(row), [] as Tile[]);
   }
 
   /**
    * Updates the board from processed columns
-   * @param columns Processed columns to update the board with
    */
-  private updateBoardFromColumns(columns: Point[][]): void {
-    this.board = flatten(columns);
+  private updateBoardFromColumns(columns: Tile[][]): void {
+    this.board = convertGridToBoard(columns);
   }
 
   /**
    * Checks if any merges are possible in a line of tiles
-   * @param line Array of points representing a row or column
+   * @param line Array of tiles representing a row or column
    * @returns true if merges are possible, false otherwise
    */
-  private canMergeInLine(line: Point[]): boolean {
+  private canMergeInLine(line: Tile[]): boolean {
     if (line.length <= 1) {
       return false;
     }
-    
+
     for (let i = 0; i < line.length - 1; i++) {
-      const current = line[i];
-      const next = line[i + 1];
-      if (current.val === next.val) {
+      if (line[i].value === line[i + 1].value) {
         return true;
       }
     }
-    
+
     return false;
   }
 
   /**
    * Gets the current game state
-   * @returns Current game state with elements and alternative points
+   * @returns Current game state with tiles and merging tiles
    */
   private getState(): State {
     this.updateBoardIndices();
-    
-    const alternativePoints: Point[] = [];
-    const gameElements = this.board.filter(position => position instanceof Point) as Point[];
-    
-    // Collect alternative points for animations
-    for (let i = 0; i < gameElements.length; i++) {
-      const element = gameElements[i];
-      if (element.alt) {
-        // Update alternative point position
-        element.alt.x = element.x;
-        element.alt.y = element.y;
-        alternativePoints.push(element.alt);
+
+    const mergingTiles: Tile[] = [];
+    const activeTiles = this.board.filter((cell) => cell instanceof Tile) as Tile[];
+
+    // Collect tiles involved in merge animations
+    for (let i = 0; i < activeTiles.length; i++) {
+      const tile = activeTiles[i];
+      if (tile.mergeSource) {
+        tile.mergeSource.x = tile.x;
+        tile.mergeSource.y = tile.y;
+        mergingTiles.push(tile.mergeSource);
       }
     }
-    
-    // Sort elements by ID for consistent rendering
-    const sortedElements = gameElements.sort((a, b) => a.id < b.id ? -1 : 1);
-    
-    return { 
-      alts: alternativePoints, 
-      elements: sortedElements 
+
+    // Sort tiles by ID for consistent rendering
+    const sortedTiles = activeTiles.sort((a, b) => (a.id < b.id ? -1 : 1));
+
+    return {
+      mergingTiles,
+      tiles: sortedTiles,
     };
   }
-
-  // Legacy method names for backward compatibility
-  doSpawn(): State { return this.spawnNewTile(); }
-  onLeft(): State { return this.moveLeft(); }
-  onRight(): State { return this.moveRight(); }
-  onUp(): State { return this.moveUp(); }
-  onDown(): State { return this.moveDown(); }
-  isOver(): boolean { return this.isGameOver(); }
 }

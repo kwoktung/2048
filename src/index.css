@@ -1,5 +1,50 @@
 @import "tailwindcss";
 
+@theme {
+  /* Surfaces */
+  --color-bg-page: #fff8f0;
+  --color-bg-empty-tile: #f5e6c8;
+  --color-bg-board: #c9956c;
+
+  /* Accent (orange buttons/scores) */
+  --color-accent: #f5a623;
+  --color-accent-hover: #e09520;
+  --color-accent-active: #cc8510;
+
+  /* Text roles */
+  --color-text-primary: #78550a;
+  --color-text-muted: #c9956c;
+  --color-text-on-accent: #ffffff;
+  --color-rank-silver: #9e9e9e;
+  --color-rank-bronze: #c9956c;
+
+  /* Tile backgrounds */
+  --color-tile-2-bg: #fff9c4;
+  --color-tile-4-bg: #ffe082;
+  --color-tile-8-bg: #ffb74d;
+  --color-tile-16-bg: #ff8a65;
+  --color-tile-32-bg: #ff7043;
+  --color-tile-64-bg: #f4511e;
+  --color-tile-128-bg: #ffd740;
+  --color-tile-256-bg: #ffc400;
+  --color-tile-512-bg: #ff9100;
+  --color-tile-1024-bg: #ff6d00;
+  --color-tile-max-bg: #dd2c00;
+
+  /* Tile text */
+  --color-tile-2-text: #78550a;
+  --color-tile-4-text: #78550a;
+  --color-tile-8-text: #ffffff;
+  --color-tile-16-text: #ffffff;
+  --color-tile-32-text: #ffffff;
+  --color-tile-64-text: #ffffff;
+  --color-tile-128-text: #78550a;
+  --color-tile-256-text: #78550a;
+  --color-tile-512-text: #ffffff;
+  --color-tile-1024-text: #ffffff;
+  --color-tile-max-text: #ffffff;
+}
+
 html,
 body,
 #root {
@@ -8,7 +53,7 @@ body,
   height: 100%;
   margin: 0;
   padding: 0;
-  background-color: #FFF8F0;
+  background-color: var(--color-bg-page);
   overflow: hidden;
   overscroll-behavior: none;
 }

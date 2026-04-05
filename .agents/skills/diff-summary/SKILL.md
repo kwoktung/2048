@@ -24,16 +24,19 @@ description.
    They are injected inline at render time:
 
    **Commits on this branch:**
+
    ```
    !git log main..HEAD --oneline --no-decorate
    ```
 
    **Files changed (stat):**
+
    ```
    !git diff main..HEAD --stat
    ```
 
    **Full diff:**
+
    ```
    !git diff main..HEAD
    ```
@@ -80,8 +83,8 @@ what each one does — skip auto-generated files, lock files, and trivial edits>
   it adds clarity (e.g., `feat(auth): ...`).
 - Write the Summary paragraph as if explaining to a new team member — assume
   they know the codebase but not the context behind this change.
-- Each bullet in "Changes" should describe a *what* and, where non-obvious, a
-  *why*. Aim for 3–8 bullets. Avoid restating the PR title.
+- Each bullet in "Changes" should describe a _what_ and, where non-obvious, a
+  _why_. Aim for 3–8 bullets. Avoid restating the PR title.
 - For very large diffs (100+ files), focus on the high-signal changes and
   mention that minor/generated files were omitted.
 - Do NOT include generic filler like "Various improvements" or "Multiple

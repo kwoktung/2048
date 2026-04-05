@@ -18,7 +18,7 @@ Read the staged and unstaged changes below, then output a single commit message 
 - **Focus on the essence.** Describe the core change (the fix, feature, or refactor). If tests or linting were also added, do not call them out — they are expected, not noteworthy.
 - **Frontend changes:** if the diff touches UI components, briefly note the visual or UX difference (e.g., "button was red, now blue" or "modal now shows inline error instead of alert").
 - Do **not** include "Generated with Claude Code", "Co-Authored-By", or test-run counts (e.g., "All 2594 tests passing").
-- **Summary line must be 72 characters or fewer** — count carefully before outputting. If your first draft is too long, shorten it: drop filler words, use a shorter synonym, or omit the scope. Move extra detail to the body. Add a body only when extra context genuinely helps readers understand *why* the change was made.
+- **Summary line must be 72 characters or fewer** — count carefully before outputting. If your first draft is too long, shorten it: drop filler words, use a shorter synonym, or omit the scope. Move extra detail to the body. Add a body only when extra context genuinely helps readers understand _why_ the change was made.
 
 ## Staged Changes
 
