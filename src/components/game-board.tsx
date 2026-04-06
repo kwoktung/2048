@@ -1,4 +1,3 @@
-import React from "react";
 import type { Tile } from "../game/tile";
 import { getTileStyle } from "../utils/tile-style";
 
